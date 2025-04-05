@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Recommendation System</title>
+</head>
+<body>
+    <h1>Recommendation System</h1>
+    <form method="post">
+        <p>Select the type of ID:</p>
+        <input type="radio" id="user" name="id_type" value="user" checked>
+        <label for="user">User ID</label>
+        <input type="radio" id="item" name="id_type" value="item">
+        <label for="item">Item ID</label>
+        <br><br>
+        <label for="id_value">Enter ID:</label>
+        <input type="text" id="id_value" name="id_value" required>
+        <button type="submit">Get Recommendations</button>
+    </form>
+
+    {% if recommendations %}
+        {% if recommendations.error %}
+            <p style="color: red;">{{ recommendations.error }}</p>
+        {% else %}
+            {% if recommendations.collaborative %}
+                <h2>Collaborative Filtering Recommendations</h2>
+                <ul>
+                    {% for rec in recommendations.collaborative %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if recommendations.content %}
+                <h2>Content Filtering Recommendations</h2>
+                <ul>
+                    {% for rec in recommendations.content %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if recommendations.combined %}
+                <h2>Combined Recommendations</h2>
+                <ul>
+                    {% for rec in recommendations.combined %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</body>
+</html>

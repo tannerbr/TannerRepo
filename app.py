@@ -1,38 +1,69 @@
-from flask import Flask, render_template, request
-import pandas as pd  # Import pandas to load CSV files
+import pandas as pd
+from flask import Flask, render_template, request, url_for
 
 app = Flask(__name__)
 
-# Load the CSV data into pandas DataFrames
-collaborative_data = pd.read_csv("data/Collaborative_Filtering.csv")  # Collaborative data (replace path if needed)
-content_data = pd.read_csv("data/content_filtering.csv")  # Content data (replace path if needed)
+# ---------------------------
+# Load Collaborative Filtering Data
+# ---------------------------
+try:
+    collab_df = pd.read_csv('./data/Collaborative_Filtering.csv')
+    # Remove extra spaces from header names.
+    collab_df.columns = collab_df.columns.str.strip()
+except FileNotFoundError:
+    raise FileNotFoundError("The file 'Collaborative_Filtering.csv' was not found. Verify the file path.")
 
-def get_collaborative_recommendations(user_item_id):
-    """
-    Obtain recommendations using collaborative filtering data.
-    Here we're using collaborative_data DataFrame for the recommendations.
-    """
-    # Assuming the 'collaborative_data' CSV has columns like ['user_id', 'item_id', 'rating']
-    user_recommendations = collaborative_data[collaborative_data['personId'] == int(user_item_id)]['contentId'].tolist()
-    return user_recommendations[:5]  # Limit to top 5 recommendations
+# Ensure the expected column is present and define the ItemID.
+if "If you liked" not in collab_df.columns:
+    raise KeyError("Collaborative_Filtering.csv must contain the column 'If you liked'.")
+collab_df['ItemID'] = collab_df['If you liked'].astype(str)
 
-def get_content_recommendations(user_item_id):
-    """
-    Obtain recommendations using content filtering data.
-    Here we're using content_data DataFrame for the recommendations.
-    """
-    # Assuming the 'content_data' CSV has columns like ['item_id', 'title', 'description']
-    # For simplicity, just return the first 5 items
-    return content_data['item_id'].tolist()[:5]  # Limit to top 5 recommendations
+# ---------------------------
+# Load Content Filtering Data
+# ---------------------------
+try:
+    content_df = pd.read_csv('./data/content_filtering.csv')
+    # Remove extra spaces from header names.
+    content_df.columns = content_df.columns.str.strip()
+except FileNotFoundError:
+    raise FileNotFoundError("The file 'content_filtering.csv' was not found. Verify the file path.")
 
-@app.route("/", methods=["GET", "POST"])
+# For content filtering, use the 'title' column as the lookup key since the CSV's index is as described.
+if "title" in content_df.columns:
+    content_df['ItemID'] = content_df['title'].astype(str)
+else:
+    # Fallback: use the first column as the identifier.
+    print("Warning: 'title' column not found in content_filtering.csv; using the first column as the ItemID.")
+    content_df['ItemID'] = content_df.iloc[:, 0].astype(str)
+
+# ---------------------------
+# Flask Routes
+# ---------------------------
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    recommendations = {}
-    if request.method == "POST":
-        user_item_id = request.form["user_item_id"]
-        recommendations["collaborative"] = get_collaborative_recommendations(user_item_id)
-        recommendations["content"] = get_content_recommendations(user_item_id)
-    return render_template("index.html", recommendations=recommendations)
+    if request.method == 'POST':
+        # Get the selected item from the dropdown.
+        item_id = request.form.get('item_id')
+        
+        # Filter the collaborative filtering data:
+        row_collab = collab_df[collab_df['ItemID'] == item_id]
+        if row_collab.empty:
+            error = f"Item ID '{item_id}' not found in Collaborative Filtering data."
+            item_ids = sorted(collab_df['ItemID'].unique())
+            return render_template('index.html', item_ids=item_ids, error=error)
+        collab_recommendations = row_collab.iloc[0].to_dict()
+        
+        # Filter the content filtering data:
+        row_content = content_df[content_df['ItemID'] == item_id]
+        content_recommendations = row_content.to_dict('records') if not row_content.empty else []
+        
+        return render_template('result.html',
+                               collab_recommendations=collab_recommendations,
+                               content_recommendations=content_recommendations)
+    else:
+        # On GET: build a dropdown using ItemIDs from the Collaborative Filtering data.
+        item_ids = sorted(collab_df['ItemID'].unique())
+        return render_template('index.html', item_ids=item_ids)
 
 if __name__ == '__main__':
     app.run(debug=True)
