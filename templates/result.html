@@ -1,58 +1,46 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Recommendations for Item: {{ collab_recommendations['If you liked'] }}</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2em; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1em; }
-    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
-    h2 { margin-top: 2em; }
-    a { text-decoration: none; color: #007BFF; }
-  </style>
-</head>
-<body>
-  <h1>Recommendations for: {{ collab_recommendations['If you liked'] }}</h1>
-  
-  <h2>Collaborative Filtering Recommendations</h2>
-  <table>
-    <tr>
-      {% for header in collab_recommendations.keys() %}
-        <th>{{ header }}</th>
-      {% endfor %}
-    </tr>
-    <tr>
-      {% for value in collab_recommendations.values() %}
-        <td>{{ value }}</td>
-      {% endfor %}
-    </tr>
-  </table>
-  
-  <h2>Content Filtering Recommendations</h2>
-  {% if content_recommendations %}
-    <table>
-      <thead>
-        <tr>
-          {% for header in content_recommendations[0].keys() %}
-            <th>{{ header }}</th>
-          {% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for rec in content_recommendations %}
-          <tr>
-            {% for value in rec.values() %}
-              <td>{{ value }}</td>
-            {% endfor %}
-          </tr>
+  <head>
+    <meta charset="utf-8">
+    <title>Recommendations for {{ selected_item }}</title>
+  </head>
+  <body>
+    <h1>Recommendations for "{{ selected_item }}"</h1>
+    
+    <h2>Collaborative Filtering Recommendations</h2>
+    {% if collab_recs %}
+      <ul>
+        {% for rec, score in collab_recs %}
+          <li>{{ rec }} &mdash; Similarity: {{ score }}</li>
         {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No content filtering recommendations found for this item.</p>
-  {% endif %}
-  
-  <br>
-  <a href="{{ url_for('index') }}">&#8592; Back to Selection</a>
-</body>
+      </ul>
+    {% else %}
+      <p>No collaborative filtering recommendations found for this item.</p>
+    {% endif %}
+    
+    <h2>Content Filtering Recommendations</h2>
+    {% if content_recs %}
+      <ul>
+        {% for rec, score in content_recs %}
+          <li>{{ rec }} &mdash; Distance: {{ score }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No content filtering recommendations found for this item.</p>
+    {% endif %}
+    
+    <!-- <h2>Content Filtering Recommendations (from CSV)</h2>
+    {% if csv_content_recs %}
+      <ul>
+        {% for rec in csv_content_recs %}
+          <li>{{ rec }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No content filtering recommendations found for this item.</p>
+    {% endif %} -->
+    
+    <br>
+    <a href="{{ url_for('index') }}">&#8592; Back to Selection</a>
+  </body>
 </html>
