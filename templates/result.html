@@ -10,8 +10,8 @@
     <h2>Collaborative Filtering Recommendations</h2>
     {% if collab_recs %}
       <ul>
-        {% for rec, score in collab_recs %}
-          <li>{{ rec }} &mdash; Similarity: {{ score }}</li>
+        {% for rec in collab_recs %}
+          <li>{{ rec }}</li>
         {% endfor %}
       </ul>
     {% else %}
@@ -21,24 +21,13 @@
     <h2>Content Filtering Recommendations</h2>
     {% if content_recs %}
       <ul>
-        {% for rec, score in content_recs %}
-          <li>{{ rec }} &mdash; Distance: {{ score }}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>No content filtering recommendations found for this item.</p>
-    {% endif %}
-    
-    <!-- <h2>Content Filtering Recommendations (from CSV)</h2>
-    {% if csv_content_recs %}
-      <ul>
-        {% for rec in csv_content_recs %}
+        {% for rec in content_recs %}
           <li>{{ rec }}</li>
         {% endfor %}
       </ul>
     {% else %}
       <p>No content filtering recommendations found for this item.</p>
-    {% endif %} -->
+    {% endif %}
     
     <br>
     <a href="{{ url_for('index') }}">&#8592; Back to Selection</a>
